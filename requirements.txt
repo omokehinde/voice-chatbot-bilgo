@@ -20,6 +20,7 @@ google-api-core==2.25.0rc1
 google-api-python-client==2.170.0
 google-auth==2.40.2
 google-auth-httplib2==0.2.0
+google-cloud-speech==2.32.0
 google-generativeai==0.7.2
 googleapis-common-protos==1.70.0
 greenlet==3.2.2
@@ -80,6 +81,7 @@ pyasn1_modules==0.4.2
 pydantic==2.11.5
 pydantic-settings==2.9.1
 pydantic_core==2.33.2
+pydub==0.25.1
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0

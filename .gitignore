@@ -151,6 +151,14 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+audio/
+*.wav
+*.mp3
+*.aac
+
+# Google Cloud Service Account Key
+*.json
+
 # Pyre type checker
 .pyre/
 
