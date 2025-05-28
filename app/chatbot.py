@@ -6,6 +6,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.chains import RetrievalQA
 from langchain_google_genai import ChatGoogleGenerativeAI
+from app.arabic_support import is_arabic
 from dotenv import load_dotenv
 import os
 
@@ -35,12 +36,16 @@ def load_vector_store(persist_directory="kb"):
 def get_chatbot():
     vectorstore = load_vector_store()
     retriever = vectorstore.as_retriever()
-
-    # Use 'models/gemini-1.5-flash' or any model as confirmed by your API key's available models
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
-
     qa = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
     return qa
+
+def prepare_query(query: str) -> str:
+    """Prepends an Arabic prompt if the query is in Arabic."""
+    if is_arabic(query):
+        prompt = "أنت مساعد ذكي ترد دائمًا باللغة العربية وبوضوح."
+        return f"{prompt}\n\n{query}"
+    return query
 
 if __name__ == "__main__":
     csv_file_path = "data.csv"
@@ -63,12 +68,16 @@ if __name__ == "__main__":
     chatbot = get_chatbot()
     print("Chatbot initialized.")
 
+    # First query
     query = "What is Alice's profession?"
-    response = chatbot.invoke({"query": query})
+    formatted_query = prepare_query(query)
+    response = chatbot.invoke({"query": formatted_query})
     print(f"\nQuery: {query}")
     print(f"Response: {response['result']}")
 
+    # Second query
     query = "Where does Bob work?"
-    response = chatbot.invoke({"query": query})
+    formatted_query = prepare_query(query)
+    response = chatbot.invoke({"query": formatted_query})
     print(f"\nQuery: {query}")
     print(f"Response: {response['result']}")
