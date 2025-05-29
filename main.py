@@ -1,4 +1,3 @@
-# main.py
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
@@ -33,7 +32,7 @@ def voice_chat():
     audio_path = os.path.join(AUDIO_FOLDER, "input.wav")
     audio_file.save(audio_path)
 
-    query = transcribe_audio(file_name=audio_path)
+    query = transcribe_audio(file_name=audio_path) # Get the user's transcribed query
 
     if not query.strip():
         return jsonify({"error": "No speech detected"}), 400
@@ -46,9 +45,16 @@ def voice_chat():
     # Ensure unique file name for concurrent sessions
     response_id = str(uuid.uuid4())
     final_audio_path = os.path.join(AUDIO_FOLDER, f"response_{response_id}.mp3")
+    # It's better to move the file after it's fully written by text_to_speech
+    # For now, let's assume text_to_speech directly saves to output_audio_path
+    # and then we rename it. If text_to_speech returns the path, os.rename is fine.
+    # If text_to_speech already names it uniquely, you might not need os.rename here.
+    # Based on tts.py, it saves to output_path and returns it, so os.rename is needed if output_path isn't the final one.
     os.rename(output_audio_path, final_audio_path)
 
+
     return jsonify({
+        "query": query,  # Include the user's transcribed query
         "text": result,
         "audio_url": f"/api/audio/{response_id}"
     })

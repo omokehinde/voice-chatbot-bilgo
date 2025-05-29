@@ -6,7 +6,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def transcribe_audio(file_name="sample_audio.aac"):
-    audio_path = os.path.join("audio", file_name)
+
+    audio_path = file_name # Directly use file_name as the path
+
+    # Ensure the audio file exists
     if not pathlib.Path(audio_path).exists():
         raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
@@ -17,7 +20,7 @@ def transcribe_audio(file_name="sample_audio.aac"):
 
     audio = speech.RecognitionAudio(content=content)
     config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED,  # Use this if unsure
+        encoding=speech.RecognitionConfig.AudioEncoding.ENCODING_UNSPECIFIED,
         language_code="en-US"
     )
 
