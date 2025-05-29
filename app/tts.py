@@ -11,7 +11,7 @@ load_dotenv()
 client = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
 engine = pyttsx3.init()
 
-def text_to_speech(text: str, output_path: str = "output/audio_response.mp3") -> str:
+def text_to_speech(text: str, output_path: str = "static/audio_response.mp3") -> str:
     """
     Converts text to speech using ElevenLabs. Falls back to pyttsx3 if ElevenLabs fails.
 

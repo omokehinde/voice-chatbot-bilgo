@@ -1,65 +1,62 @@
+# main.py
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 import os
-import sounddevice as sd
-import wavio
-from pydub import AudioSegment
-from pydub.playback import play
+import uuid
+import soundfile as sf
+import numpy as np
 
 from app.transcription import transcribe_audio
 from app.tts import text_to_speech
 from app.chatbot import get_chatbot
 from app.arabic_support import is_arabic
 
-# Constants
-AUDIO_FOLDER = "audio"
-AUDIO_FILENAME = "input.wav"
-AUDIO_PATH = os.path.join(AUDIO_FOLDER, AUDIO_FILENAME)
-DURATION = 10  # seconds
-SAMPLE_RATE = 44100
+app = Flask(__name__)
+CORS(app)
 
-def record_audio(filepath=AUDIO_PATH, duration=DURATION, fs=SAMPLE_RATE):
-    print("🎙️ Recording...")
-    os.makedirs(AUDIO_FOLDER, exist_ok=True)
-    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1)
-    sd.wait()
-    recording = recording / max(abs(recording))  # Normalize audio
-    wavio.write(filepath, recording, fs, sampwidth=2)
-    print("✅ Recording saved")
+AUDIO_FOLDER = "static"
+os.makedirs(AUDIO_FOLDER, exist_ok=True)
+
+chatbot = get_chatbot()
 
 def apply_language_prompt(query: str) -> str:
     if is_arabic(query):
-        arabic_prompt = "أنت مساعد ذكي ترد دائمًا باللغة العربية وبوضوح."
-        return f"{arabic_prompt}\n\n{query}"
+        return "أنت مساعد ذكي ترد دائمًا باللغة العربية وبوضوح.\n\n" + query
     return query
 
-def main_chat_loop():
-    chatbot = get_chatbot()
-    print("🤖 Voice chatbot started. Speak into the mic. Press Ctrl+C to exit.")
+@app.route("/api/voice-chat", methods=["POST"])
+def voice_chat():
+    if "audio" not in request.files:
+        return jsonify({"error": "No audio file provided"}), 400
 
-    while True:
-        try:
-            record_audio()
-            query = transcribe_audio(file_name=AUDIO_FILENAME)
+    audio_file = request.files["audio"]
+    audio_path = os.path.join(AUDIO_FOLDER, "input.wav")
+    audio_file.save(audio_path)
 
-            if not query.strip():
-                print("🤔 Couldn’t hear anything. Try again.")
-                continue
+    query = transcribe_audio(file_name=audio_path)
 
-            print(f"🗣️ You said: {query}")
-            query = apply_language_prompt(query)
+    if not query.strip():
+        return jsonify({"error": "No speech detected"}), 400
 
-            response = chatbot.invoke({"query": query})
-            answer = response["result"]
-            print(f"🤖 {answer}")
+    applied_query = apply_language_prompt(query)
+    result = chatbot.invoke({"query": applied_query})["result"]
 
-            # Use TTS and try to play audio if ElevenLabs succeeded
-            audio_path = text_to_speech(answer)
-            if audio_path and os.path.exists(audio_path):
-                audio = AudioSegment.from_file(audio_path)
-                play(audio)
+    output_audio_path = text_to_speech(result)
 
-        except KeyboardInterrupt:
-            print("\n👋 Exiting...")
-            break
+    # Ensure unique file name for concurrent sessions
+    response_id = str(uuid.uuid4())
+    final_audio_path = os.path.join(AUDIO_FOLDER, f"response_{response_id}.mp3")
+    os.rename(output_audio_path, final_audio_path)
+
+    return jsonify({
+        "text": result,
+        "audio_url": f"/api/audio/{response_id}"
+    })
+
+@app.route("/api/audio/<response_id>")
+def get_audio(response_id):
+    filename = f"response_{response_id}.mp3"
+    return send_from_directory(AUDIO_FOLDER, filename)
 
 if __name__ == "__main__":
-    main_chat_loop()
+    app.run(debug=True)
