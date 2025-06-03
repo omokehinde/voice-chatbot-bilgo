@@ -164,6 +164,10 @@ audio/
 # Google Cloud Service Account Key
 *.json
 
+# Allow package.json and package-lock.json
+!package.json
+!package-lock.json
+
 # Pyre type checker
 .pyre/
 
