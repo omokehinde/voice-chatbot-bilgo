@@ -162,11 +162,8 @@ audio/
 *.aac
 
 # Google Cloud Service Account Key
-*.json
+gen-lang-client-0613360158-0dbd2394fa10.json
 
-# Allow package.json and package-lock.json
-!package.json
-!package-lock.json
 
 # Pyre type checker
 .pyre/
