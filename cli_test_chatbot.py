@@ -10,7 +10,7 @@ from app.chatbot import get_chatbot
 from app.arabic_support import is_arabic
 
 # Constants
-AUDIO_FOLDER = "audio"
+AUDIO_FOLDER = "static"
 AUDIO_FILENAME = "input.wav"
 AUDIO_PATH = os.path.join(AUDIO_FOLDER, AUDIO_FILENAME)
 DURATION = 10  # seconds
@@ -38,7 +38,7 @@ def main_chat_loop():
     while True:
         try:
             record_audio()
-            query = transcribe_audio(file_name=AUDIO_FILENAME)
+            query = transcribe_audio(file_name=AUDIO_PATH)
 
             if not query.strip():
                 print("🤔 Couldn’t hear anything. Try again.")
